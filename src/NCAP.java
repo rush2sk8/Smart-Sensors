@@ -13,7 +13,10 @@ import org.jsoup.Jsoup;
 
 public class NCAP{
 
+	//this is the currentIP that the NCAP is hosting
 	private String currentIP;
+
+	//this is the flag to stop the scrolling text. must be volatile because 2 threads have to access it.
 	private static volatile boolean flag;
 
 	/**
@@ -46,6 +49,7 @@ public class NCAP{
 	 */
 	public String discoverWTIMs(int from , int to, boolean continuous){
 
+		//makes sure that the indicies passed in are valid
 		if(from<2||to>254||to<from)
 			throw new IllegalArgumentException("Invalid search indicies");
 
@@ -59,6 +63,7 @@ public class NCAP{
 
 			} catch (IOException e) {e.printStackTrace();}
 
+		//this continues the process of finding something
 		}while(continuous);
 
 		return null;
