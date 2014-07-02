@@ -8,6 +8,7 @@ import javax.swing.Timer;
 import org.jsoup.Jsoup;
 
 /**
+ * This class gives a user the ablity to control WTIMs through an NCAP by HTTP access.
  * @author Rushad Antia
  */
 
@@ -84,9 +85,13 @@ public class NCAP{
 			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=0");
 		} catch (IOException e) {
 			e.printStackTrace();
+
+			//makes sure that we return because otherwise we would substring stuff that doesnt exist. also protects against sockettimiing out 
 			return null;
 		}
 
+		
+		//allows easy to read format of the recieved data
 		info = info.substring(info.indexOf("TIM Id "),info.indexOf("   ©"));
 		String toReturn = info.substring(info.indexOf("TIM Id"),info.indexOf("Transducer Channel ")) + "\n";
 
@@ -104,6 +109,7 @@ public class NCAP{
 	 */
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException {
 
+		//uses the JSoup library to excecute a command to a certain ip using http connection to the NCAP
 		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId=9&timeout=10&samplingMode=7&timtype="+timType+"&format=0&transducerData="+arg).execute();
 
 	}
@@ -117,6 +123,8 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException {
+
+		//returns the sensor data at a certain channel id 
 		String response = Jsoup.connect(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0").get().body().text();
 		response =  response.substring(response.indexOf("Time(nanosecs) "), response.indexOf("© 2012 Esensors"));
 		response = response.substring(response.indexOf("Transducer Data"));
@@ -138,7 +146,7 @@ public class NCAP{
 	}
 
 	/**
-	 * Retrieves sensor data of a certain sensor at an interval 
+	 * Retrieves sensor data of a certain sensor at an interval (not thread-safe yet)
 	 * @param wtimID - The WTIM id
 	 * @param channelID - The Channel ID
 	 * @param interval - The interval to wait (in seconds)
@@ -149,8 +157,12 @@ public class NCAP{
 	@SuppressWarnings("static-access")
 	public void displaySensorDataAtInterval(int wtimID , int channelID , int interval, int numSamples) throws IOException, InterruptedException {
 
+	//TODO make this in a thread
+	
 		for(int i=0;i<numSamples;i++) {
 			System.out.println(getSensorData(107, 3, 1));
+			
+			//statically sleeps the current thread that it is on 
 			Thread.currentThread().sleep((long)interval*1000);
 		}
 
@@ -163,16 +175,21 @@ public class NCAP{
 	 * @param textToDisplay - the text to display
 	 */
 	public void startScrollingText(final int wtimID ,final String textToDisplay) {
+		//makes flag true so that i can re-use this method
 		flag = true;
 
+		//creates and starts a new thread
 		new Thread(new Runnable() {
 
 			@SuppressWarnings("static-access")
+		
 			@Override
 			public void run() {
 
+				//makes the current text the textToDisplay
 				String currentText = textToDisplay;
 
+				//keeps going according to the flag. Unless the flag is false. That is why it is volatile
 				while(flag) {
 
 					String oldText = currentText;
@@ -194,7 +211,6 @@ public class NCAP{
 
 			}
 		}).start();
-
 	}
 
 	/**

@@ -10,7 +10,7 @@ public class Driver {
 		final NCAP ncap = new NCAP("http://192.168.254.102");
 		
 		doConcurrentDataRetreival();
-doConcurrentDataRetreival();
+		doConcurrentDataRetreival();
 
 	}
 
@@ -96,7 +96,10 @@ doConcurrentDataRetreival();
 			}
 		});
 		x.start();
-		y.start();x.join();y.join();
+		y.start();
+		
+		x.join();
+		y.join();
 
 		System.out.println("Total Time To Do Alot of calculation and network stuff: "+(System.currentTimeMillis()-current)/1000.0);
 
