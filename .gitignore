@@ -12,7 +12,7 @@ $RECYCLE.BIN/
 *.cab
 *.msi
 *.msm
-*.msp
+*.msp 
 
 # =========================
 # Operating System Files
