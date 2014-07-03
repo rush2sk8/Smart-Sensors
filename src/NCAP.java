@@ -1,14 +1,10 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-
-import javax.swing.Timer;
 
 import org.jsoup.Jsoup;
 
 /**
- * This class gives a user the ablity to control WTIMs through an NCAP by HTTP access.
+ * This class gives a user the ability to control WTIMs through an NCAP by HTTP access.
  * @author Rushad Antia
  */
 
@@ -64,33 +60,35 @@ public class NCAP{
 
 			} catch (IOException e) {e.printStackTrace();}
 
-		//this continues the process of finding something
+			//this continues the process of finding something
 		}while(continuous);
 
+		
+		 
 		return null;
 
 	}
 
 	/**
+	 * Wifi version only. Allows you to retrieve data such as channels and names of a specified transducer.
 	 * Retrieves the information about a TIM
 	 * @param timId - The ID of the TIM
 	 * @param timeOut - The Timeout in seconds
-	 * @param timType - 1 for Wi-Fi 0 for RS232
 	 * @return Returns the Information about the requested TIM
 	 */
-	public String getTIMInfo(int timId,int timeOut , int timType){
+	public String getTIMInfo(int timId,int timeOut){
 
 		String info = null;
 		try {
-			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=0");
+			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype=1&format=0");
 		} catch (IOException e) {
 			e.printStackTrace();
 
-			//makes sure that we return because otherwise we would substring stuff that doesnt exist. also protects against sockettimiing out 
+			//makes sure that we return because otherwise we would substring stuff that doesnt exist throwing an null pointer. also protects against sockettimiing out 
 			return null;
 		}
 
-		
+
 		//allows easy to read format of the recieved data
 		info = info.substring(info.indexOf("TIM Id "),info.indexOf("   ©"));
 		String toReturn = info.substring(info.indexOf("TIM Id"),info.indexOf("Transducer Channel ")) + "\n";
@@ -129,7 +127,7 @@ public class NCAP{
 		response =  response.substring(response.indexOf("Time(nanosecs) "), response.indexOf("© 2012 Esensors"));
 		response = response.substring(response.indexOf("Transducer Data"));
 
-		return "Transducer " + wtimID + " Data: " + response.substring(response.indexOf("Data"));
+		return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
 	}
 
 	/**
@@ -146,25 +144,41 @@ public class NCAP{
 	}
 
 	/**
-	 * Retrieves sensor data of a certain sensor at an interval (not thread-safe yet)
-	 * @param wtimID - The WTIM id
+	 * Retrieves sensor data of a certain sensor at an interval.Works in its own thread
+	 * @param wtimID - The WTIM id 
 	 * @param channelID - The Channel ID
 	 * @param interval - The interval to wait (in seconds)
 	 * @param numSamples - The number of times to retrieve data at X intervals
 	 * @throws IOException 
 	 * @throws InterruptedException
 	 */
-	@SuppressWarnings("static-access")
-	public void displaySensorDataAtInterval(int wtimID , int channelID , int interval, int numSamples) throws IOException, InterruptedException {
+	public void displaySensorDataAtInterval(final int wtimID ,final int channelID , final int interval, final int numSamples) throws IOException, InterruptedException {
 
-	//TODO make this in a thread
-	
-		for(int i=0;i<numSamples;i++) {
-			System.out.println(getSensorData(107, 3, 1));
-			
-			//statically sleeps the current thread that it is on 
-			Thread.currentThread().sleep((long)interval*1000);
-		}
+		Thread x = new Thread(new Runnable() {
+
+			@SuppressWarnings("static-access")
+			@Override
+			public void run() {
+				for(int i=0;i<numSamples;i++) {
+
+					try {
+						System.out.println(getSensorData(wtimID, channelID, interval));
+					} catch (IOException e1) {
+						// TODO fix all the stuff with this
+						e1.printStackTrace();
+					}
+
+					//statically sleeps the current thread that it is on 
+					try {
+						Thread.currentThread().sleep((long)interval*1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		x.start();
+		x.join();
 
 	}
 
@@ -182,7 +196,7 @@ public class NCAP{
 		new Thread(new Runnable() {
 
 			@SuppressWarnings("static-access")
-		
+
 			@Override
 			public void run() {
 
@@ -220,7 +234,32 @@ public class NCAP{
 	public void stopScrollingText() {
 		flag = false;
 	}
+
+	/**
+	 * This allows the user to read the TEDS from a specified TIM ID , along with other information
+	 * @param timID
+	 * @param channelID
+	 * @param timeout
+	 * @param tedsType
+	 * @param timType
+	 * @return the raw sensor data
+	 * @throws IOException
+	 */
+	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException {
+
+		String data = Jsoup.connect(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0").get().body().text();
+
+		String toReturn = data.substring(data.indexOf("Error code"),data.lastIndexOf("TIM Id"))+"\n";
+		toReturn += data.substring(data.lastIndexOf("TIM Id"),data.indexOf("Transducer Channel Id"))+"\n";
+		toReturn +=data.substring(data.indexOf("Transducer Channel Id"),data.indexOf("TEDS Type"))+"\n";
+		toReturn +=data.substring(data.indexOf("TEDS Type"),data.lastIndexOf("Raw TEDS"))+"\n";
+		toReturn +=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("© 2012 Esensors"));
 	
+		return toReturn;
+	}
+
+
+
 	/**
 	 * Helper method that scrapes given url
 	 * @param u - url
