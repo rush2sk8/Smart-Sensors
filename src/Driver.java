@@ -10,7 +10,6 @@ public class  Driver{
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		final NCAP ncap = new NCAP("http://192.168.254.102");
-System.out.println(Jsoup.connect("http://192.168.254.102/1451/Discovery/TransducerDiscovery.htm?timId=105&timeout=10&timtype=0&format=0").get().body().text());
 		
 	}
 
