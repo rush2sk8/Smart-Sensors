@@ -1,10 +1,9 @@
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 
 import org.jsoup.Jsoup;
 
 /**
- * This class gives a user the ability to control WTIMs through an NCAP by HTTP access.
+ * This class gives a user the ability to control WTIMs through an NCAP by HTTP access. ONLY FOR WIFI NCAP
  * @author Rushad Antia
  */
 
@@ -25,18 +24,6 @@ public class NCAP{
 		currentIP = ip;
 	}
 
-	//TODO fix the sockettimeout
-	/**
-	 * Gets all the connected WTIMS to the NCAP
-	 * @param from - starting range
-	 * @param to - ending range 
-	 * @return All the found WTIMS that the NCAP has discovered
-	 * @throws SocketTimeoutException
-	 */
-	public String discoverWTIMs(int from , int to) throws SocketTimeoutException{
-		return discoverWTIMs(from, to, false);
-	}
-
 	/**
 	 * Gets all the connected WTIMS to the NCAP
 	 * @param from - starting range 
@@ -44,48 +31,38 @@ public class NCAP{
 	 * @param continuous - true if you want to keep checking 
 	 * @return A list of all the found tims
 	 */
-	public String discoverWTIMs(int from , int to, boolean continuous){
+	public String discoverWTIMs(int from , int to){
 
 		//makes sure that the indicies passed in are valid
 		if(from<2||to>254||to<from)
 			throw new IllegalArgumentException("Invalid search indicies");
 
-		do {
-			try {
-				String found = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1&format=0");
-				String toReturn = found.substring(found.indexOf("Error code"),found.indexOf("WTIM Number")) + "\n";
-				toReturn += found.substring(found.indexOf("WTIM Number"),found.indexOf("WTIM Ids List ")) + "\n";
-				toReturn += found.substring(found.indexOf("WTIM Ids List "),found.indexOf("   © 2012 Esensors"));
-				return toReturn;
+		for(int i=from;i<=to;i++) {
+			String data = getTIMInfo(i, 10, 1);
+			System.out.println(data);
+		}
 
-			} catch (IOException e) {e.printStackTrace();}
-
-			//this continues the process of finding something
-		}while(continuous);
-
-		
-		 
 		return null;
 
 	}
 
 	/**
-	 * Wifi version only. Allows you to retrieve data such as channels and names of a specified transducer.
+	 * Allows you to retrieve data such as channels and names of a specified transducer.
 	 * Retrieves the information about a TIM
 	 * @param timId - The ID of the TIM
 	 * @param timeOut - The Timeout in seconds
 	 * @return Returns the Information about the requested TIM
 	 */
-	public String getTIMInfo(int timId,int timeOut){
+	public String getTIMInfo(int timId,int timeOut,int timType){
 
 		String info = null;
 		try {
-			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype=1&format=0");
+			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=0");
 		} catch (IOException e) {
 			e.printStackTrace();
 
 			//makes sure that we return because otherwise we would substring stuff that doesnt exist throwing an null pointer. also protects against sockettimiing out 
-			return null;
+			return "";
 		}
 
 
@@ -113,7 +90,7 @@ public class NCAP{
 	}
 
 	/**
-	 * Returns the converted sensor data
+	 * Wi-Fi NCAP version of the getSensorData method coonverted by the NCAP
 	 * @param wtimID - The WTIM ID
 	 * @param channelID - The Channel ID
 	 * @param timeOut - Timeout
@@ -122,16 +99,23 @@ public class NCAP{
 	 */
 	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException {
 
-		//returns the sensor data at a certain channel id 
-		String response = Jsoup.connect(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0").get().body().text();
-		response =  response.substring(response.indexOf("Time(nanosecs) "), response.indexOf("© 2012 Esensors"));
-		response = response.substring(response.indexOf("Transducer Data"));
+		try {
 
-		return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
+			//returns the sensor data at a certain channel id 
+			String response = Jsoup.connect(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0").get().body().text();
+			response =  response.substring(response.lastIndexOf("Transducer Data "), response.indexOf("© 2012 Esensors"));
+			response = response.substring(response.indexOf("Transducer Data"));
+
+			return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
+
+		}catch(StringIndexOutOfBoundsException |IOException ee) {
+			ee.printStackTrace();
+		}
+		return null;
 	}
 
 	/**
-	 * Returns only the data no text just data
+	 * Returns only the data no text just data.Can be parsed into a double 
 	 * @param wtimID - the WTIM id
 	 * @param channelID - the channel desired to access
 	 * @param timeout - the timeout
@@ -140,7 +124,7 @@ public class NCAP{
 	 */
 	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException {
 		String data  = getSensorData(wtimID, channelID, timeout);
-		return data.substring(data.indexOf("Data")+11);
+		return data.substring(data.indexOf("Data:")+5).trim();
 	}
 
 	/**
@@ -254,7 +238,7 @@ public class NCAP{
 		toReturn +=data.substring(data.indexOf("Transducer Channel Id"),data.indexOf("TEDS Type"))+"\n";
 		toReturn +=data.substring(data.indexOf("TEDS Type"),data.lastIndexOf("Raw TEDS"))+"\n";
 		toReturn +=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("© 2012 Esensors"));
-	
+
 		return toReturn;
 	}
 

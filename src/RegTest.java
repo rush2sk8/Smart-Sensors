@@ -35,7 +35,7 @@ public class RegTest {
 			long start =  System.currentTimeMillis();
 
 			//gets the tim info for the specified tim 
-			handler.getTIMInfo(timId, timeOut);
+			//handler.getTIMInfo(timId, timeOut);
 
 			//creates a new thread that safely tries to get the sample status of the tim  RUNS ONCE
 			Thread t = new Thread(new Runnable() {
