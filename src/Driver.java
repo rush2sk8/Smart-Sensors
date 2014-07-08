@@ -1,18 +1,30 @@
-import java.io.FileWriter;
 import java.io.IOException;
-
-import org.jsoup.Jsoup;
+import java.net.SocketTimeoutException;
 
 
 public class  Driver{
 
-	public volatile static FileWriter outFile;
+	public static void main(String[] args) throws  InterruptedException, SocketTimeoutException, IOException {
 
-	public static void main(String[] args) throws IOException, InterruptedException {
-		final NCAP ncap = new NCAP("http://192.168.254.102");
+
+		NCAP ncap = new NCAP("http://192.168.254.102");
+ncap.getChannels(105);
 		
-	}
+		/*		boolean flag = true;
+		while(flag) {
+			try {
+				System.out.println(ncap.readRawTEDSFromTIM(107, 3, 10, 3, 1));
+				flag = false;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				continue;
+			}
 
+		}
+
+	}*/
+	}
 
 	public static void doConcurrentDataRetreival(final int times) {
 		final Thread x  = new Thread(new Runnable() {

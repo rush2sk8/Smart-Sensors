@@ -1,9 +1,12 @@
 import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 
 import org.jsoup.Jsoup;
 
 /**
- * This class gives a user the ability to control WTIMs through an NCAP by HTTP access. ONLY FOR WIFI NCAP
+ * This class gives a user the ability to control WTIMs through an NCAP by HTTP access. ONLY FOR WIFI NCAP.
+ * Tends to to throw <code>SocketTimeoutException</code> when connection is not well
  * @author Rushad Antia
  */
 
@@ -12,38 +15,41 @@ public class NCAP{
 	//this is the currentIP that the NCAP is hosting
 	private String currentIP;
 
-	//this is the flag to stop the scrolling text. must be volatile because 2 threads have to access it.
-	private static volatile boolean flag;
-
 	/**
 	 * Creates an object (instance) of the NCAP
 	 * @param ip
 	 */
 	public NCAP(String ip){
-		flag = true;
 		currentIP = ip;
 	}
 
 	/**
-	 * Gets all the connected WTIMS to the NCAP
+	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
 	 * @param from - starting range 
 	 * @param to - ending range
 	 * @param continuous - true if you want to keep checking 
 	 * @return A list of all the found tims
 	 */
-	public String discoverWTIMs(int from , int to){
+	public ArrayList<String> discoverWTIMs(int from , int to)throws SocketTimeoutException{
 
-		//makes sure that the indicies passed in are valid
+		//makes sure that the indices passed in are valid
 		if(from<2||to>254||to<from)
 			throw new IllegalArgumentException("Invalid search indicies");
 
+		ArrayList<String> foundTIMS = new ArrayList<String>(10);
+
 		for(int i=from;i<=to;i++) {
 			String data = getTIMInfo(i, 10, 1);
-			System.out.println(data);
+			String subbed = null;
+
+			try {	 
+				subbed = data.substring(data.indexOf("Transducer Names"));
+			}catch(Exception e) {e.printStackTrace();System.out.println(subbed);}
+
+			if(subbed.length()>16) 
+				foundTIMS.add(data.substring(data.indexOf("TIM Id")+6,data.indexOf("Transducer Channel")).trim());	
 		}
-
-		return null;
-
+		return foundTIMS;
 	}
 
 	/**
@@ -53,18 +59,16 @@ public class NCAP{
 	 * @param timeOut - The Timeout in seconds
 	 * @return Returns the Information about the requested TIM
 	 */
-	public String getTIMInfo(int timId,int timeOut,int timType){
+	public String getTIMInfo(int timId,int timeOut,int timType)throws SocketTimeoutException{
 
 		String info = null;
 		try {
 			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=0");
 		} catch (IOException e) {
-			e.printStackTrace();
-
 			//makes sure that we return because otherwise we would substring stuff that doesnt exist throwing an null pointer. also protects against sockettimiing out 
+			e.printStackTrace();
 			return "";
 		}
-
 
 		//allows easy to read format of the recieved data
 		info = info.substring(info.indexOf("TIM Id "),info.indexOf("   ©"));
@@ -82,7 +86,7 @@ public class NCAP{
 	 * @param timType - 1 is for Wi-Fi 0 is for the RS232 connection
 	 * @throws IOException
 	 */
-	public void writeToScreen(int wtimId, String arg,int timType) throws IOException {
+	public void writeToScreen(int wtimId, String arg,int timType) throws IOException,SocketTimeoutException {
 
 		//uses the JSoup library to excecute a command to a certain ip using http connection to the NCAP
 		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId=9&timeout=10&samplingMode=7&timtype="+timType+"&format=0&transducerData="+arg).execute();
@@ -90,14 +94,14 @@ public class NCAP{
 	}
 
 	/**
-	 * Wi-Fi NCAP version of the getSensorData method coonverted by the NCAP
+	 * Wi-Fi NCAP version of the getSensorData method converted by the NCAP
 	 * @param wtimID - The WTIM ID
 	 * @param channelID - The Channel ID
 	 * @param timeOut - Timeout
 	 * @return sensor data
 	 * @throws IOException
 	 */
-	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException {
+	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException,SocketTimeoutException {
 
 		try {
 
@@ -122,7 +126,7 @@ public class NCAP{
 	 * @return the converted sensor reading
 	 * @throws IOException
 	 */
-	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException {
+	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException,SocketTimeoutException {
 		String data  = getSensorData(wtimID, channelID, timeout);
 		return data.substring(data.indexOf("Data:")+5).trim();
 	}
@@ -136,11 +140,12 @@ public class NCAP{
 	 * @throws IOException 
 	 * @throws InterruptedException
 	 */
-	public void displaySensorDataAtInterval(final int wtimID ,final int channelID , final int interval, final int numSamples) throws IOException, InterruptedException {
+	@SuppressWarnings("static-access")
+	public void displaySensorDataAtInterval(final int wtimID ,final int channelID , final int interval, final int numSamples) throws IOException, InterruptedException,SocketTimeoutException {
 
 		Thread x = new Thread(new Runnable() {
 
-			@SuppressWarnings("static-access")
+
 			@Override
 			public void run() {
 				for(int i=0;i<numSamples;i++) {
@@ -148,7 +153,6 @@ public class NCAP{
 					try {
 						System.out.println(getSensorData(wtimID, channelID, interval));
 					} catch (IOException e1) {
-						// TODO fix all the stuff with this
 						e1.printStackTrace();
 					}
 
@@ -166,70 +170,17 @@ public class NCAP{
 
 	}
 
-	/** 
-	 * NOTICE: Invokes a thread to do the text take heed.
-	 * Starts a scrolling text on the screen of a WTIM.
-	 * @param wtimID - the id of the WTIM
-	 * @param textToDisplay - the text to display
-	 */
-	public void startScrollingText(final int wtimID ,final String textToDisplay) {
-		//makes flag true so that i can re-use this method
-		flag = true;
-
-		//creates and starts a new thread
-		new Thread(new Runnable() {
-
-			@SuppressWarnings("static-access")
-
-			@Override
-			public void run() {
-
-				//makes the current text the textToDisplay
-				String currentText = textToDisplay;
-
-				//keeps going according to the flag. Unless the flag is false. That is why it is volatile
-				while(flag) {
-
-					String oldText = currentText;
-					String newText = oldText.substring(1)+oldText.substring(0,1);
-					try {
-						writeToScreen(107, newText, 1);
-					} catch (IOException e) {
-
-						e.printStackTrace();
-					}
-					currentText = newText;	
-					try {
-						Thread.currentThread().sleep(100);
-					} catch (InterruptedException e) {
-
-						e.printStackTrace();
-					}
-				}
-
-			}
-		}).start();
-	}
-
-	/**
-	 * Stops the text from scrolling. 
-	 * If no text is scrolling on the screen this method will have no effect
-	 */
-	public void stopScrollingText() {
-		flag = false;
-	}
-
 	/**
 	 * This allows the user to read the TEDS from a specified TIM ID , along with other information
-	 * @param timID
-	 * @param channelID
-	 * @param timeout
-	 * @param tedsType
-	 * @param timType
+	 * @param timID - ID of the TIM
+	 * @param channelID - what channel to get data from
+	 * @param timeout - timout
+	 * @param tedsType - which teds type
+	 * @param timType - 1 WIFI 0 RS232
 	 * @return the raw sensor data
 	 * @throws IOException
 	 */
-	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException {
+	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException,SocketTimeoutException {
 
 		String data = Jsoup.connect(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0").get().body().text();
 
@@ -242,6 +193,38 @@ public class NCAP{
 		return toReturn;
 	}
 
+	/**
+	 * Returns a list of all the connected WTIMs cached in the NCAP's memory
+	 * @return A list of all the connected WTIMs
+	 * @throws IOException
+	 */
+	public ArrayList<String> getCachedWTIMList() throws IOException{
+		String data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?reptim=1");
+		data = data.substring(data.indexOf("WTIM Ids")+13, data.indexOf(" ©"));
+
+		ArrayList<String> tims = new ArrayList<String>(); 
+
+		for(String tim:data.split(","))
+			tims.add(tim.trim());
+
+		return tims;
+	}
+
+	/**
+	 * Returns the channels of a specified tim
+	 * @param wtimId - id of desired tim
+	 * @return - the channels
+	 * @throws SocketTimeoutException
+	 */
+	public String getChannels(int wtimId) throws SocketTimeoutException {
+		String data = getTIMInfo(wtimId, 10, 1);
+		data = data.substring(data.indexOf("Transducer Channel Ids")+"Transducer Channel Ids".length(),data.indexOf("Transducer Names")).trim();
+		return data;
+	}
+
+
+
+
 
 
 	/**
@@ -250,7 +233,7 @@ public class NCAP{
 	 * @return - data from the scrape
 	 * @throws IOException
 	 */
-	private String scrapePage(String u) throws IOException{
+	private String scrapePage(String u) throws IOException,SocketTimeoutException{
 		return Jsoup.connect(u).get().body().text();
 	}
 
