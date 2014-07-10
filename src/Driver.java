@@ -1,30 +1,18 @@
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+
+import org.jsoup.Jsoup;
 
 
 public class  Driver{
 
-	public static void main(String[] args) throws  InterruptedException, SocketTimeoutException, IOException {
+	final static NCAP ncap1 = new NCAP("http://192.168.254.102",10);
+	public static void main(String[] args) throws IOException, InterruptedException {
 
+System.out.println(Jsoup.connect("http://192.168.254.102/1451/Discovery/TIMDiscovery.htm?wtimIdl=10&wtimIdh=110&reptim=0&timtype=1").timeout(100000000).get().body().text());
 
-		NCAP ncap = new NCAP("http://192.168.254.102");
-ncap.getChannels(105);
 		
-		/*		boolean flag = true;
-		while(flag) {
-			try {
-				System.out.println(ncap.readRawTEDSFromTIM(107, 3, 10, 3, 1));
-				flag = false;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				continue;
-			}
-
-		}
-
-	}*/
 	}
+
 
 	public static void doConcurrentDataRetreival(final int times) {
 		final Thread x  = new Thread(new Runnable() {
@@ -113,5 +101,7 @@ ncap.getChannels(105);
 		System.out.println("Total Time To Do Alot of calculation and network stuff: "+(System.currentTimeMillis()-current)/1000.0);
 
 	}
-
+	private static NCAP ncap;
+	
 }
+

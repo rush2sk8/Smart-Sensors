@@ -26,7 +26,7 @@ public class RegTest {
 	public static void RunSimultaneousOperationsTest(int times,int timId, int timeOut , int timType) throws InterruptedException {
 
 		//creates and NCAP
-		final NCAP handler = new NCAP("http://192.168.254.102");
+		final NCAP handler = new NCAP("http://192.168.254.102",10);
 
 		//stores all the times for each trial 
 		double[] nums = new double[times];
@@ -58,12 +58,7 @@ public class RegTest {
 				@Override
 				public void run() {
 
-					try {
-						handler.discoverWTIMs(107, 111);
-					} catch (SocketTimeoutException e) {
-
-						e.printStackTrace();
-					}
+					handler.discoverWTIMs(107, 111);
 
 				}
 			});
@@ -112,7 +107,7 @@ public class RegTest {
 	public static void GetMultiplePiecesOfData(int times, int wtimID , int channelID , int timeOut) throws IOException,SocketTimeoutException {
 
 		//creates a NCAP at the default IP address 
-		final NCAP handler = new  NCAP("http://192.168.254.102");
+		final NCAP handler = new  NCAP("http://192.168.254.102",10);
 
 		//does the other stuff
 		for(int i=0;i<times;i++) {
