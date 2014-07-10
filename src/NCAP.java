@@ -27,6 +27,15 @@ public class NCAP{
 	}
 
 	/**
+	 * Get IP
+	 * @return - Returns current IP
+	 */
+	public String getIP() {
+		return currentIP;
+	}
+	
+	
+	/**
 	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
 	 * @param from - starting range 
 	 * @param to - ending range

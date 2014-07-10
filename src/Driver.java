@@ -1,15 +1,13 @@
 import java.io.IOException;
 
-import org.jsoup.Jsoup;
-
 
 public class  Driver{
 
-	final static NCAP ncap1 = new NCAP("http://192.168.254.102",10);
+	final static NCAP ncap  = new NCAP("http://192.168.254.102",10);
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-System.out.println(Jsoup.connect("http://192.168.254.102/1451/Discovery/TIMDiscovery.htm?wtimIdl=10&wtimIdh=110&reptim=0&timtype=1").timeout(100000000).get().body().text());
-
+		
+		
 		
 	}
 
@@ -101,7 +99,6 @@ System.out.println(Jsoup.connect("http://192.168.254.102/1451/Discovery/TIMDisco
 		System.out.println("Total Time To Do Alot of calculation and network stuff: "+(System.currentTimeMillis()-current)/1000.0);
 
 	}
-	private static NCAP ncap;
 	
 }
 
