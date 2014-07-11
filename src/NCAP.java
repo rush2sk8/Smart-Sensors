@@ -101,7 +101,7 @@ public class NCAP{
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException{
 
 		//uses the JSoup library to excecute a command to a certain ip using http connection to the NCAP
-		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId=9&timeout=10&samplingMode=7&timtype="+timType+"&format=0&transducerData="+arg).execute();
+		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId=9&timeout=10&samplingMode=7&timtype="+timType+"&format=0&transducerData="+arg).timeout(timeout*1000).execute();
 
 	}
 
@@ -118,7 +118,7 @@ public class NCAP{
 		try {
 
 			//returns the sensor data at a certain channel id 
-			String response = Jsoup.connect(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0").get().body().text();
+			String response = scrapePage(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0");
 			response =  response.substring(response.lastIndexOf("Transducer Data "), response.indexOf("© 2012 Esensors"));
 			response = response.substring(response.indexOf("Transducer Data"));
 
@@ -143,44 +143,6 @@ public class NCAP{
 		return data.substring(data.indexOf("Data:")+5).trim();
 	}
 
-	/**
-	 * Retrieves sensor data of a certain sensor at an interval.Works in its own thread
-	 * @param wtimID - The WTIM id 
-	 * @param channelID - The Channel ID
-	 * @param interval - The interval to wait (in seconds)
-	 * @param numSamples - The number of times to retrieve data at X intervals
-	 * @throws IOException 
-	 * @throws InterruptedException
-	 */
-	@SuppressWarnings("static-access")
-	public void displaySensorDataAtInterval(final int wtimID ,final int channelID , final int interval, final int numSamples) throws IOException, InterruptedException{
-
-		Thread x = new Thread(new Runnable() {
-
-
-			@Override
-			public void run() {
-				for(int i=0;i<numSamples;i++) {
-
-					try {
-						System.out.println(getSensorData(wtimID, channelID, interval));
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-
-					//statically sleeps the current thread that it is on 
-					try {
-						Thread.currentThread().sleep((long)interval*1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		x.start();
-		x.join();
-
-	}
 
 	/**
 	 * This allows the user to read the TEDS from a specified TIM ID , along with other information

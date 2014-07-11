@@ -6,7 +6,7 @@ public class  Driver{
 	final static NCAP ncap  = new NCAP("http://192.168.254.102",10);
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		
+		System.out.println(ncap.getSensorDataRaw(105,99, 10));
 		
 		
 	}
