@@ -15,7 +15,7 @@ public class NCAP{
 	//this is the currentIP that the NCAP is hosting
 	private String currentIP;
 
-	
+
 	private int timeout;
 	/** 
 	 * Creates an object (instance) of the NCAP
@@ -33,8 +33,8 @@ public class NCAP{
 	public String getIP() {
 		return currentIP;
 	}
-	
-	
+
+
 	/**
 	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
 	 * @param from - starting range 
@@ -56,7 +56,7 @@ public class NCAP{
 
 			try {	 
 				subbed = data.substring(data.indexOf("Transducer Names"));
-			}catch(Exception e) {e.printStackTrace();System.out.println(subbed);}
+			}catch(Exception e) {e.printStackTrace();}
 
 			if(subbed.length()>16&&subbed!=null) 
 				foundTIMS.add(data.substring(data.indexOf("TIM Id")+6,data.indexOf("Transducer Channel")).trim());	
@@ -180,9 +180,9 @@ public class NCAP{
 
 		for(String tim:data.split(",")) {
 			if(!tim.isEmpty())
-			tims.add(tim.trim());
+				tims.add(tim.trim());
 		}
-			
+
 
 		return tims;
 	}
@@ -195,10 +195,36 @@ public class NCAP{
 	 */
 	public String getChannels(int wtimId) {
 		String data = getTIMInfo(wtimId, 10, 1);
-		System.out.println(data);
 		data = data.substring(data.indexOf("Transducer Channel Ids")+"Transducer Channel Ids".length(),data.indexOf("Transducer Names")).trim();
 		return data;
 	} 
+
+	public ArrayList<String> legitSearch(int to,int from) {
+
+		if(from<2||to>254||to>from)
+			throw new IllegalArgumentException("Invalid search indicies");
+
+		ArrayList<String> foundTIMS = new ArrayList<String>(10);
+
+		String data =null;
+		try {
+			data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl=90&wtimIdh=91&reptim=0&timtype=1");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return null; 
+		}
+		String subbed=null;
+		try {	 
+			subbed = data.substring(data.indexOf("WTIM Ids List")+13,data.indexOf("   © 2012 Esensors"));
+		}catch(Exception e) {e.printStackTrace();}
+
+		for(String s : subbed.split(",")) 
+			foundTIMS.add(s.trim());
+
+		return foundTIMS;
+	}
+
+
 
 
 	/**
