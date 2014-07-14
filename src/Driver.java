@@ -3,10 +3,11 @@ import java.io.IOException;
 
 public class  Driver{
 
-	final static NCAP ncap  = new NCAP("http://192.168.254.102",100);
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		System.out.println(ncap.legitSearch(90, 110));
+	NCAP ncap = new NCAP("http://192.168.254.102", 10);
+	System.out.println(ncap.getSensorData(107, 3, 10));
 		
 		
 	}
