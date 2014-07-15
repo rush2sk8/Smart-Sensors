@@ -17,6 +17,7 @@ public class NCAP{
 
 
 	private int timeout;
+
 	/** 
 	 * Creates an object (instance) of the NCAP
 	 * @param ip
@@ -35,34 +36,6 @@ public class NCAP{
 	}
 
 
-	/**
-	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
-	 * @param from - starting range 
-	 * @param to - ending range
-	 * @param continuous - true if you want to keep checking 
-	 * @return A list of all the found tims
-	 */
-	public ArrayList<String> discoverWTIMs(int from , int to){
-
-		//makes sure that the indices passed in are valid
-		if(from<2||to>254||to<from)
-			throw new IllegalArgumentException("Invalid search indicies");
-
-		ArrayList<String> foundTIMS = new ArrayList<String>(10);
-
-		for(int i=from;i<=to;i++) {
-			String data = getTIMInfo(i, 10, 1);
-			String subbed = null;
-
-			try {	 
-				subbed = data.substring(data.indexOf("Transducer Names"));
-			}catch(Exception e) {e.printStackTrace();}
-
-			if(subbed.length()>16&&subbed!=null) 
-				foundTIMS.add(data.substring(data.indexOf("TIM Id")+6,data.indexOf("Transducer Channel")).trim());	
-		}
-		return foundTIMS;
-	}
 
 	/**
 	 * Allows you to retrieve data such as channels and names of a specified transducer.
@@ -140,7 +113,13 @@ public class NCAP{
 	 */
 	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException{
 		String data  = getSensorData(wtimID, channelID, timeout);
-		return data.substring(data.indexOf("Data:")+5).trim();
+		if(data==null)
+			return "";
+		String toReturn = data.substring(data.indexOf("Data: ")+5).trim();
+		if(toReturn !=null)
+			return toReturn;
+		return "";
+
 	}
 
 
@@ -199,16 +178,25 @@ public class NCAP{
 		return data;
 	} 
 
-	public ArrayList<String> legitSearch(int to,int from) {
 
-		if(from<2||to>254||to>from)
+	/**
+	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
+	 * @param from - starting range 
+	 * @param to - ending range
+	 * @param continuous - true if you want to keep checking 
+	 * @return A list of all the found tims
+	 */
+
+	public ArrayList<String> legitSearch(int from,int to) {
+
+		if(from<2||to>254||from>to)
 			throw new IllegalArgumentException("Invalid search indicies");
 
 		ArrayList<String> foundTIMS = new ArrayList<String>(10);
 
-		String data =null;
+		String data = null;
 		try {
-			data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl=90&wtimIdh=91&reptim=0&timtype=1");
+			data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			return null; 
@@ -224,8 +212,16 @@ public class NCAP{
 		return foundTIMS;
 	}
 
-
-
+	/**
+	 * Saves current discovery to cache of NCAP
+	 */
+	public void saveToCache() {
+		try {
+			Jsoup.connect(currentIP+"/1451/Discovery/TIMDiscovery.htm?reptim=2").timeout(timeout*1000).execute();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Helper method that scrapes given url

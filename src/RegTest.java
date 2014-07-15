@@ -58,8 +58,7 @@ public class RegTest {
 				@Override
 				public void run() {
 
-					handler.discoverWTIMs(107, 111);
-
+			 
 				}
 			});
 
