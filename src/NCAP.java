@@ -135,7 +135,7 @@ public class NCAP{
 	 */
 	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException{
 
-		String data = Jsoup.connect(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0").get().body().text();
+		String data = scrapePage(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0");
 
 		String toReturn = data.substring(data.indexOf("Error code"),data.lastIndexOf("TIM Id"))+"\n";
 		toReturn += data.substring(data.lastIndexOf("TIM Id"),data.indexOf("Transducer Channel Id"))+"\n";
@@ -196,7 +196,7 @@ public class NCAP{
 
 		String data = null;
 		try {
-			data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1");
+			data = Jsoup.connect(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1").timeout(timeout*1000*2).get().body().text();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			return null; 
