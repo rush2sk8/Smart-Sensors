@@ -98,7 +98,7 @@ public class NCAP{
 			return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
 
 		}catch(StringIndexOutOfBoundsException |IOException ee) {
-			ee.printStackTrace();
+			 
 		}
 		return null;
 	}
@@ -114,11 +114,11 @@ public class NCAP{
 	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException{
 		String data  = getSensorData(wtimID, channelID, timeout);
 		if(data==null)
-			return "";
+			return data;
 		String toReturn = data.substring(data.indexOf("Data: ")+5).trim();
 		if(toReturn !=null)
 			return toReturn;
-		return "";
+		return null;
 
 	}
 

@@ -26,7 +26,7 @@ public class RegTest {
 	public static void RunSimultaneousOperationsTest(int times,int timId, int timeOut , int timType) throws InterruptedException {
 
 		//creates and NCAP
-		final NCAP handler = new NCAP("http://192.168.254.102",10);
+		//final NCAP handler = new NCAP("http://192.168.254.102",10);
 
 		//stores all the times for each trial 
 		double[] nums = new double[times];
