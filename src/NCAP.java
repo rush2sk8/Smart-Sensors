@@ -72,9 +72,15 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException{
+ 
+		writeTransducerData(wtimId, arg	, 9);
+ 
+	}
+
+	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{
 
 		//uses the JSoup library to excecute a command to a certain ip using http connection to the NCAP
-		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId=9&timeout=10&samplingMode=7&timtype="+timType+"&format=0&transducerData="+arg).timeout(timeout*1000).execute();
+		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId="+channelId+"&timeout=10&samplingMode=7&timtype=1&format=0&transducerData="+argument).timeout(timeout*1000).execute();
 
 	}
 
@@ -98,7 +104,7 @@ public class NCAP{
 			return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
 
 		}catch(StringIndexOutOfBoundsException |IOException ee) {
-			 
+
 		}
 		return null;
 	}

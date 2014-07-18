@@ -7,8 +7,9 @@ public class  Driver{
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 	NCAP ncap = new NCAP("http://192.168.254.102", 10);
-	System.out.println(ncap.getSensorData(105, 8, 10));
 		
+//	for(int i=2;i<254;i++)
+		System.out.println(ncap.getTIMInfo(95, 10, 1));
 		
 	}
 
