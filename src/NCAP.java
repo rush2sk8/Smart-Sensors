@@ -80,7 +80,7 @@ public class NCAP{
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException{
 
 		writeTransducerData(wtimId, arg	, 9);
-
+ 
 	}
 
 	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{

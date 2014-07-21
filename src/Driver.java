@@ -1,3 +1,4 @@
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -5,18 +6,30 @@ import java.io.IOException;
 
 public class  Driver{
 
-
+ static NCAP ncap = new NCAP("http://192.168.254.102", 10); 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-	NCAP ncap = new NCAP("http://192.168.254.102", 10);
-		
-//	for(int i=2;i<254;i++)
-		System.out.println(ncap.getSensorDataRaw(wtimID, channelID, timeout));
-
-
+	ncap.writeTransducerData(107, "Hello", 9);
 		
 	}
 
+	public static void WRITEALLTEDS() throws IOException {
+		FileWriter outFile = new FileWriter(new File("allGoldTEDS.txt"));
+		int[] nums = {95,105,106,107};
+	
+		for(int num:nums) {
+			for(int i=0;i<20;i++) {
+				for(int k=0;k<20;k++) {
+					System.out.println(i+" "+k);
+					String data = ncap.readRawTEDSFromTIM(num, i, 10, k, 1);
+					if(!data.contains("No TEDS Available"))
+					outFile.write("TIM ID: " + num + "@ Channel ID: "+i+" and @TEDSType: "+k + data+"\r\n");
+				}
+			}
+		}
+		outFile.close();
+		Toolkit.getDefaultToolkit().beep();
+	}
 
 	public static void doConcurrentDataRetreival(final int times) {
 		final Thread x  = new Thread(new Runnable() {
@@ -105,6 +118,6 @@ public class  Driver{
 		System.out.println("Total Time To Do Alot of calculation and network stuff: "+(System.currentTimeMillis()-current)/1000.0);
 
 	}
-	
+
 }
 
