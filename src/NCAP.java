@@ -6,7 +6,10 @@ import org.jsoup.Jsoup;
 
 /**
  * This class gives a user the ability to control WTIMs through an NCAP by HTTP access. ONLY FOR WIFI NCAP.
- * Tends to to throw <code>SocketTimeoutException</code> when connection is not well
+ * Tends to to throw <code>SocketTimeoutException</code> when connection is not well.
+ * 
+ * 
+ * This class works by using the WEBPAGES of the NCAP and runs independently of them.
  * @author Rushad Antia
  */
 
@@ -54,13 +57,16 @@ public class NCAP{
 			e.printStackTrace();
 			return "";
 		}
+		if(info.contains("8194"))
+			return "Not Found";
 
 		//allows easy to read format of the recieved data
-		info = info.substring(info.indexOf("TIM Id "),info.indexOf("   ©"));
-		String toReturn = info.substring(info.indexOf("TIM Id"),info.indexOf("Transducer Channel ")) + "\n";
+		info = info.substring(321,378);
 
-		toReturn += info.substring(info.indexOf("Transducer Channel Ids"), info.indexOf("Transducer Names")) + "\n";
-		toReturn += info.substring(info.indexOf("Transducer Names"));
+		String toReturn = info.substring(0,info.indexOf("Transducer Channel Ids")) + "\n";
+
+		toReturn += info.substring(info.indexOf("Transducer Channel Ids"), info.indexOf("Transducer Name")) + "\n";
+		toReturn += info.substring(info.indexOf("Transducer Name"));
 		return toReturn;
 	}
 
@@ -72,9 +78,9 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException{
- 
+
 		writeTransducerData(wtimId, arg	, 9);
- 
+
 	}
 
 	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{
@@ -93,18 +99,20 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException{
+		if(channelID>11)
+			return null;
 
 		try {
-
 			//returns the sensor data at a certain channel id 
 			String response = scrapePage(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0");
-			response =  response.substring(response.lastIndexOf("Transducer Data "), response.indexOf("© 2012 Esensors"));
+
+			response =  response.substring(392, response.indexOf("© 2012 Esensors"));
 			response = response.substring(response.indexOf("Transducer Data"));
 
-			return "Transducer " + wtimID + " Data:" + response.substring(response.indexOf("Data")+4);
+			return "Transducer " + wtimID + " Data:" + response.substring(15);
 
 		}catch(StringIndexOutOfBoundsException |IOException ee) {
-
+			ee.printStackTrace();
 		}
 		return null;
 	}
@@ -118,10 +126,13 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException{
+
 		String data  = getSensorData(wtimID, channelID, timeout);
 		if(data==null)
 			return data;
+
 		String toReturn = data.substring(data.indexOf("Data: ")+5).trim();
+
 		if(toReturn !=null)
 			return toReturn;
 		return null;
@@ -142,14 +153,12 @@ public class NCAP{
 	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException{
 
 		String data = scrapePage(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0");
+		data=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("© 2012 Esensors"));
 
-		String toReturn = data.substring(data.indexOf("Error code"),data.lastIndexOf("TIM Id"))+"\n";
-		toReturn += data.substring(data.lastIndexOf("TIM Id"),data.indexOf("Transducer Channel Id"))+"\n";
-		toReturn +=data.substring(data.indexOf("Transducer Channel Id"),data.indexOf("TEDS Type"))+"\n";
-		toReturn +=data.substring(data.indexOf("TEDS Type"),data.lastIndexOf("Raw TEDS"))+"\n";
-		toReturn +=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("© 2012 Esensors"));
+		if(data.equals("Raw TEDS   ")) 
+			return "No TEDS Available";
 
-		return toReturn;
+		return data;
 	}
 
 	/**
@@ -159,15 +168,14 @@ public class NCAP{
 	 */
 	public ArrayList<String> getCachedWTIMList() throws IOException{
 		String data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?reptim=1");
-		data = data.substring(data.indexOf("WTIM Ids")+13, data.indexOf("   © 2012 Esensors"));
+
+		data = data.substring(470, data.indexOf("   © 2012 Esensors"));
 
 		ArrayList<String> tims = new ArrayList<String>(); 
 
-		for(String tim:data.split(",")) {
+		for(String tim:data.split(",")) 
 			if(!tim.isEmpty())
 				tims.add(tim.trim());
-		}
-
 
 		return tims;
 	}
@@ -179,9 +187,18 @@ public class NCAP{
 	 * @throws SocketTimeoutException
 	 */
 	public String getChannels(int wtimId) {
-		String data = getTIMInfo(wtimId, 10, 1);
-		data = data.substring(data.indexOf("Transducer Channel Ids")+"Transducer Channel Ids".length(),data.indexOf("Transducer Names")).trim();
-		return data;
+		String data = null;
+		try {
+			data = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+wtimId+"&timeout=10&timtype=1&format=0");
+		} catch (IOException e) {	
+			e.printStackTrace();
+		}
+		data = data.substring(354,data.indexOf("Transducer Names")).trim();
+
+		if(!data.equals("Ids"))
+			return data;
+
+		return "No Channels Available";
 	} 
 
 
@@ -205,8 +222,10 @@ public class NCAP{
 			data = Jsoup.connect(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1").timeout(timeout*1000*2).get().body().text();
 		} catch (IOException e1) {
 			e1.printStackTrace();
-			return null; 
+			foundTIMS.add("None Found");
+			return foundTIMS;
 		}
+
 		String subbed=null;
 		try {	 
 			subbed = data.substring(data.indexOf("WTIM Ids List")+13,data.indexOf("   © 2012 Esensors"));

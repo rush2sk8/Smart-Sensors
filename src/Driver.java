@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 
@@ -9,7 +11,9 @@ public class  Driver{
 	NCAP ncap = new NCAP("http://192.168.254.102", 10);
 		
 //	for(int i=2;i<254;i++)
-		System.out.println(ncap.getTIMInfo(95, 10, 1));
+		System.out.println(ncap.getSensorDataRaw(wtimID, channelID, timeout));
+
+
 		
 	}
 
