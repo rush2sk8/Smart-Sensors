@@ -1,18 +1,21 @@
-import java.awt.Toolkit;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
 
 public class  Driver{
 
- static NCAP ncap = new NCAP("http://192.168.254.102", 10); 
-	public static void main(String[] args) throws IOException, InterruptedException {
-
  
-		
+ 
+ public static void main(String[] args) throws IOException, InterruptedException {
+NCAP ncap = new NCAP("http://192.168.254.102", 10); 
+	
+	 
+	
+	
 	}
-	public static void WRITEALLTEDINFOS() throws IOException {
+
+	
+	
+	/*	public static void WRITEALLTEDINFOS() throws IOException {
 		FileWriter outFile = new FileWriter(new File("allTEDSINFO.txt"));
 		int[] nums = {95,105,106,107};
 	
@@ -134,6 +137,6 @@ public class  Driver{
 		System.out.println("Total Time To Do Alot of calculation and network stuff: "+(System.currentTimeMillis()-current)/1000.0);
 
 	}
-
+*/
 }
 
