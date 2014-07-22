@@ -9,10 +9,26 @@ public class  Driver{
  static NCAP ncap = new NCAP("http://192.168.254.102", 10); 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-	ncap.writeTransducerData(107, "Hello", 9);
+ 
 		
 	}
-
+	public static void WRITEALLTEDINFOS() throws IOException {
+		FileWriter outFile = new FileWriter(new File("allTEDSINFO.txt"));
+		int[] nums = {95,105,106,107};
+	
+		for(int num:nums) {
+			for(int i=0;i<256;i++) {
+				for(int k=0;k<256;k++) {
+					System.out.println(num+" "+i+" "+k);
+					String data = ncap.queryTEDS(num, i, k, 10);
+					outFile.write("TIM ID: " + num + "@ Channel ID: "+i+" and @TEDSType: "+k + data+"\r\n");
+				}
+			}
+		}
+		outFile.close();
+		Toolkit.getDefaultToolkit().beep();
+	}
+	
 	public static void WRITEALLTEDS() throws IOException {
 		FileWriter outFile = new FileWriter(new File("allGoldTEDS.txt"));
 		int[] nums = {95,105,106,107};

@@ -80,7 +80,7 @@ public class NCAP{
 	public void writeToScreen(int wtimId, String arg,int timType) throws IOException{
 
 		writeTransducerData(wtimId, arg	, 9);
- 
+
 	}
 
 	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{
@@ -247,6 +247,33 @@ public class NCAP{
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * Allows you to gain TEDS information that is readable
+	 * @param wtimId
+	 * @param channelId
+	 * @param tedsType
+	 * @param timeout
+	 * @return
+	 */
+	public String queryTEDS(int wtimId,int channelId,int tedsType,int timeout) {
+
+		try {
+			String data = scrapePage(currentIP+"/1451/TEDSManager/QueryTeds.htm?timId="+wtimId+"&channelId="+channelId+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype=1");
+			int trans = data.indexOf("Transducer Channel Id ");
+			String toReturn = data.substring(data.indexOf("TIM Id "),trans)+"\n";
+			int tedsT = data.indexOf("TEDS Type");
+			toReturn +=data.substring(trans,tedsT)+"\n";
+			toReturn += data.substring(data.indexOf("TEDS Infor"),data.indexOf(" © 2012 Esensors"));
+			return toReturn;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;		
+	}
+
 
 	/**
 	 * Helper method that scrapes given url
