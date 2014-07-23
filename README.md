@@ -1,7 +1,9 @@
 Smart-Sensors
 =============
 
-TO USE THIS YOU MUST USE THE JSOUP LIBRARY http://jsoup.org/ <-- GET IT HERE
+All the libraries are included in the libraries folder.
+
+All the credit to those libraries go to their respected owners i do not own them i just use them
 
 If you are using the smart sensors gui with this repo then you dont need the jsoup library because it already has the jsoup and apache libraries
 
