@@ -219,7 +219,7 @@ public class NCAP{
 
 		String data = null;
 		try {
-			data = Jsoup.connect(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1").timeout(timeout*1000*2).get().body().text();
+			data = Jsoup.connect(currentIP+"/1451/Discovery/TIMDiscovery.htm?wtimIdl="+from+"&wtimIdh="+to+"&reptim=0&timtype=1").timeout(70000).get().body().text();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			foundTIMS.add("None Found");
