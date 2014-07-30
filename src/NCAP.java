@@ -201,6 +201,22 @@ public class NCAP{
 		return "No Channels Available";
 	} 
 
+	/**
+	 * Checks if the tim is connected
+	 * @param wtimId - id of the tim
+	 * @return - true if connected
+	 */
+	public boolean isConnected(int wtimId) {
+		try {
+			String data = getChannels(wtimId);
+
+			if(!data.equals("No Channels Available"))
+				return true;
+		}catch(Exception e) {
+			return false;
+		}
+		return false;
+	}
 
 	/**
 	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
