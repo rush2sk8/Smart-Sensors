@@ -193,6 +193,7 @@ public class NCAP{
 		} catch (IOException e) {	
 			e.printStackTrace();
 		}
+		if(data!=null)
 		data = data.substring(354,data.indexOf("Transducer Names")).trim();
 
 		if(!data.equals("Ids"))
