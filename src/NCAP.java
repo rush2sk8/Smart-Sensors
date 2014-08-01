@@ -1,8 +1,29 @@
 import java.io.IOException;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+
+
+
+
+
+
+import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * This class gives a user the ability to control WTIMs through an NCAP by HTTP access. ONLY FOR WIFI NCAP.
@@ -18,8 +39,13 @@ public class NCAP{
 	//this is the currentIP that the NCAP is hosting
 	private String currentIP;
 
-
+	//holds timeout info
 	private int timeout;
+
+	//docBuilder for holding XML data
+	private	DocumentBuilder docBuilder;
+
+	private boolean isEthernet;
 
 	/** 
 	 * Creates an object (instance) of the NCAP
@@ -28,6 +54,12 @@ public class NCAP{
 	public NCAP(String ip,int time){
 		currentIP = ip;
 		timeout = time;
+		try {
+			docBuilder  = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
+		isEthernet = isOnEthernet(ip);
 	}
 
 	/**
@@ -36,38 +68,6 @@ public class NCAP{
 	 */
 	public String getIP() {
 		return currentIP;
-	}
-
-
-
-	/**
-	 * Allows you to retrieve data such as channels and names of a specified transducer.
-	 * Retrieves the information about a TIM
-	 * @param timId - The ID of the TIM
-	 * @param timeOut - The Timeout in seconds
-	 * @return Returns the Information about the requested TIM
-	 */
-	public String getTIMInfo(int timId,int timeOut,int timType){
-
-		String info = null;
-		try {
-			info = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=0");
-		} catch (IOException e) {
-			//makes sure that we return because otherwise we would substring stuff that doesnt exist throwing an null pointer. also protects against sockettimiing out 
-			e.printStackTrace();
-			return "";
-		}
-		if(info.contains("8194"))
-			return "Not Found";
-
-		//allows easy to read format of the recieved data
-		info = info.substring(321,378);
-
-		String toReturn = info.substring(0,info.indexOf("Transducer Channel Ids")) + "\n";
-
-		toReturn += info.substring(info.indexOf("Transducer Channel Ids"), info.indexOf("Transducer Name")) + "\n";
-		toReturn += info.substring(info.indexOf("Transducer Name"));
-		return toReturn;
 	}
 
 	/**
@@ -83,11 +83,44 @@ public class NCAP{
 
 	}
 
-	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{
+	/**
+	 * Allows you to retrieve data such as channels and names of a specified transducer.	XXX XML
+	 * Retrieves the information about a TIM
+	 * @param timId - The ID of the TIM
+	 * @param timeOut - The Timeout in seconds
+	 * @return Returns the Information about the requested TIM
+	 */
+	public String getTIMInfo(int timId,int timeOut,int timType) {
+		String toReturn = "";
 
+		String data = getXml(currentIP,  "/1451/Discovery/TransducerDiscovery.htm?timId="+timId+"&timeout="+timeOut+"&timtype="+timType+"&format=1");
+
+		Document parse  = parse(data);
+
+		NodeList list = parse.getElementsByTagName("TransducerDiscoveryHTTPResponse");
+
+
+		Element element = (Element)list.item(0);
+
+		NodeList ids = element.getElementsByTagName("channelIds");
+		Element line = (Element) ids.item(0);
+
+		toReturn += "TIM ID: "+ timId+"\n";
+		toReturn += "Channel Ids: "+ getCharacterDataFromElement(line);
+
+		return toReturn;
+	}
+
+	/**
+	 * Writes data to a tim
+	 * @param wtimId - id of the wtim
+	 * @param argument - what to write
+	 * @param channelId - channel you wish to write to 
+	 * @throws IOException
+	 */
+	public void writeTransducerData(int wtimId,String argument,int channelId) throws IOException{
 		//uses the JSoup library to excecute a command to a certain ip using http connection to the NCAP
 		Jsoup.connect(currentIP+"/1451/TransducerAccess/WriteData.htm?timId="+wtimId+"&channelId="+channelId+"&timeout=10&samplingMode=7&timtype=1&format=0&transducerData="+argument).timeout(timeout*1000).execute();
-
 	}
 
 	/**
@@ -99,6 +132,7 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public String getSensorData(int wtimID , int channelID , int timeOut)throws IOException{
+
 		if(channelID>11)
 			return null;
 
@@ -126,6 +160,8 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public String getSensorDataRaw(int wtimID , int channelID , int timeout) throws IOException{
+		if(isEthernet) 
+			return getSensorDataXML(wtimID, channelID, timeout);
 
 		String data  = getSensorData(wtimID, channelID, timeout);
 		if(data==null)
@@ -138,7 +174,6 @@ public class NCAP{
 		return null;
 
 	}
-
 
 	/**
 	 * This allows the user to read the TEDS from a specified TIM ID , along with other information
@@ -167,6 +202,9 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	public ArrayList<String> getCachedWTIMList() throws IOException{
+		if(isEthernet)
+			return getCachedWTIMListXML();
+
 		String data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?reptim=1");
 
 		data = data.substring(470, data.indexOf("   © 2012 Esensors"));
@@ -187,6 +225,9 @@ public class NCAP{
 	 * @throws SocketTimeoutException
 	 */
 	public String getChannels(int wtimId) {
+		if(isEthernet)
+			return getChannelsXML(wtimId);
+
 		String data = null;
 		try {
 			data = scrapePage(currentIP+ "/1451/Discovery/TransducerDiscovery.htm?timId="+wtimId+"&timeout=10&timtype=1&format=0");
@@ -194,13 +235,16 @@ public class NCAP{
 			e.printStackTrace();
 		}
 		if(data!=null)
-		data = data.substring(354,data.indexOf("Transducer Names")).trim();
+			data = data.substring(354,data.indexOf("Transducer Names")).trim();
+		else
+			return null;
 
 		if(!data.equals("Ids"))
 			return data;
 
 		return "No Channels Available";
 	} 
+
 
 	/**
 	 * Checks if the tim is connected
@@ -226,7 +270,6 @@ public class NCAP{
 	 * @param continuous - true if you want to keep checking 
 	 * @return A list of all the found tims
 	 */
-
 	public ArrayList<String> legitSearch(int from,int to) {
 
 		if(from<2||to>254||from>to)
@@ -291,15 +334,98 @@ public class NCAP{
 		return null;		
 	}
 
+	private String getSensorDataXML(int wtimID , int channelID , int timeout) {
 
-	/**
-	 * Helper method that scrapes given url
-	 * @param u - url
-	 * @return - data from the scrape
-	 * @throws IOException
-	 */
+		Document document = parse(getXml(currentIP, "/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeout+"&samplingMode=7&timtype=1&format=1"));
+
+		NodeList nodes = document.getElementsByTagName("ReadDataHTTPResponse");
+
+		Element element = (Element) nodes.item(0);
+
+		NodeList data = element.getElementsByTagName("transducerData");
+
+		return getCharacterDataFromElement((Element) data.item(0)).trim();	
+
+	}
+
 	private String scrapePage(String u) throws IOException{
 		return Jsoup.connect(u).timeout(timeout*1000).get().body().text();
 	}
 
+	private String getXml(String header,String url){;
+
+	Response finalResponse = null;
+	String thisUrl = url;
+
+	for(int i=0;i<2;i++) {
+		Response response = null;
+		try {
+			response = Jsoup.connect(header+thisUrl).followRedirects(false).timeout(1000*timeout).execute();
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+		
+		if(response==null)
+			return "Problem";
+		
+		finalResponse = response;
+		int status = response.statusCode();
+
+		if(status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER) {
+			String redirect = response.header("location");
+			thisUrl = redirect;
+		}
+	}
+
+	return finalResponse.body();
+	}
+
+	private String getCharacterDataFromElement(Element e) {
+		Node child = e.getFirstChild();
+		if(child instanceof CharacterData) {
+			CharacterData cd = (CharacterData)child;
+			return cd.getData();
+		}
+		return "?";
+	}
+
+	private Document parse(String xmlData) {
+		try {
+			return docBuilder.parse(new InputSource(new StringReader(xmlData)));
+		} catch (SAXException | IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private boolean isOnEthernet(String url) {
+		try {
+			Jsoup.connect(url+"/1451/RdTimSamplesStatus.htm").get().body();
+		} catch (IOException e) {
+			return false;
+		} 
+		return true;
+	}
+
+	private ArrayList<String> getCachedWTIMListXML(){
+		System.out.println("eth");
+		Document doc = parse(getXml(currentIP, "/1451/Discovery/TIMDiscovery.htm?reptim=1&format=1"));
+		NodeList nodes = doc.getElementsByTagName("TIMDiscoveryHTTPResponse");
+		Element element = (Element) nodes.item(0);
+		NodeList data = element.getElementsByTagName("timIds");
+		return new ArrayList<String>(Arrays.asList(getCharacterDataFromElement((Element)data.item(0)).split(",")));
+
+	}
+
+	private String getChannelsXML(int wtimId) {
+		String data =  getTIMInfo(wtimId, 10, 1);
+		return data.substring(data.indexOf("Channel Ids: ")+13);
+//TODO Make an NCAP ETH calss and do it that way
+	}
+
+
+	public boolean isEthernet() {
+		return isEthernet;
+	}
 }
