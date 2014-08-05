@@ -10,9 +10,10 @@ public class  Driver{
 
 	public static void main(String[] args) throws NumberFormatException, IOException, ParserConfigurationException, SAXException {
 
-		NCAP ncap = new NCAP("http://192.168.1.102", 10);
+		NCAP ncap = NCAP.getNCAP("http://129.6.78.166", 10);//eth
+		
 
-/*		for(int i=0;i<50;i++) {	
+		/*		for(int i=0;i<50;i++) {	
 			long start = System.currentTimeMillis();
 
 			System.out.println(ncap.getSensorDataXML(107, 3, 10));
@@ -23,11 +24,12 @@ public class  Driver{
 			System.out.println("Time took for HTML: "+(System.currentTimeMillis()-start)/1000.0);
 		}
 	}
-*/
-
-		System.out.println(ncap.getChannels(107));
+		 */
+	 
+		System.out.println(ncap.queryTEDS(95, 7, 51, 10));
 	}
-	
 
+	
 }
+
 
