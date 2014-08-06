@@ -284,14 +284,14 @@ public class NCAP{
 	 * @return an ncap
 	 */
 	public static NCAP getNCAP(String currentIP,int timeout) {
-		
+
 		try {
 			Jsoup.connect(currentIP+"/1451/RdTimSampleStatus.htm").get().body();
 		} catch (IOException e) {
-			return new NCAP_ETH(currentIP, timeout);
+			return new NCAP(currentIP, timeout);
 		}
-		return new NCAP(currentIP, timeout);
 
+		return new NCAP_ETH(currentIP, timeout);
 
 	}
 
