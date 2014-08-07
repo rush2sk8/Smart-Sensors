@@ -11,8 +11,8 @@ public class  Driver{
 
 	public static void main(String[] args) throws NumberFormatException, IOException, ParserConfigurationException, SAXException {
 
-		//NCAP ncap = NCAP.getNCAP("http://129.6.78.166", 10);//eth
-		NCAP ncap = NCAP.getNCAP("http://192.168.254.102", 10);
+		NCAP ncap = NCAP.getNCAP("http://129.6.78.166", 10);//eth
+		//NCAP ncap = NCAP.getNCAP("http://192.168.254.102", 10);
 
 		/*		for(int i=0;i<50;i++) {	
 			long start = System.currentTimeMillis();
@@ -27,21 +27,21 @@ public class  Driver{
 	}
 		 */
 		Scanner key = new Scanner(System.in);
- 
-	/*	while(true) {
+
+		while(true) {
 			System.out.println("0 Open 1 Close:");
 			String data = key.next();
 
 			if(data.equals("0")) 
-				ncap.writeTransducerData(107, data, 7);
+				ncap.writeTransducerData(105, data, 7);
 			else if(data.equals("1")) 
-				ncap.writeTransducerData(107, data, 7);
+				ncap.writeTransducerData(105, data, 7);
 			else 
 				break;
 		}
 		key.close();
-	}*/
 	}
 }
+
 
 
