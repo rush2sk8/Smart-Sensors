@@ -6,12 +6,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 public class  Driver{
-
-	static int x=0;
-
-	public static void main(String[] args) throws NumberFormatException, IOException, ParserConfigurationException, SAXException {
+ 
+	public static void main(String[] args) throws NumberFormatException, IOException, ParserConfigurationException, SAXException, InterruptedException {
 
 		NCAP ncap = NCAP.getNCAP("http://129.6.78.166", 10);//eth
+		
 		//NCAP ncap = NCAP.getNCAP("http://192.168.254.102", 10);
 
 		/*		for(int i=0;i<50;i++) {	
@@ -26,20 +25,23 @@ public class  Driver{
 		}
 	}
 		 */
-		Scanner key = new Scanner(System.in);
 
+/*		Scanner key = new Scanner(System.in);
+		int i=0;
 		while(true) {
-			System.out.println("0 Open 1 Close:");
-			String data = key.next();
 
-			if(data.equals("0")) 
-				ncap.writeTransducerData(105, data, 7);
-			else if(data.equals("1")) 
-				ncap.writeTransducerData(105, data, 7);
-			else 
-				break;
-		}
-		key.close();
+
+			if(i==0) {
+
+				ncap.writeTransducerData(105, i+"", 7);i=1;
+			}else if(i==1) {
+				ncap.writeTransducerData(105, i+"", 7);
+				i=0;
+			}
+			Thread.sleep(1000);
+		}*/
+		
+		
 	}
 }
 
