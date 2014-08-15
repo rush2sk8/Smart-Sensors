@@ -22,7 +22,7 @@ public class NCAP{
 	 * @param ip - the ip address
 	 * @param time - the timeout
 	 */
-	public NCAP(String ip,int time){
+	private NCAP(String ip,int time){
 		currentIP = ip;
 		this.timeout = time;
 
