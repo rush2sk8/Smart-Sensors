@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import org.jsoup.Jsoup;
@@ -20,7 +19,8 @@ public class NCAP{
 
 	/** 
 	 * Creates an object (instance) of the NCAP
-	 * @param ip
+	 * @param ip - the ip address
+	 * @param time - the timeout
 	 */
 	public NCAP(String ip,int time){
 		currentIP = ip;
@@ -157,7 +157,6 @@ public class NCAP{
 	 * Returns the channels of a specified tim
 	 * @param wtimId - id of desired tim
 	 * @return - the channels
-	 * @throws SocketTimeoutException
 	 */
 	public String getChannels(int wtimId) {
 
@@ -199,7 +198,6 @@ public class NCAP{
 	 * Gets all the connected WTIMS to the NCAP. CAN TAKE UP TO 90 SECONDS TO COMPLETE
 	 * @param from - starting range 
 	 * @param to - ending range
-	 * @param continuous - true if you want to keep checking 
 	 * @return A list of all the found tims
 	 */
 	public ArrayList<String> legitSearch(int from,int to) {
@@ -242,11 +240,11 @@ public class NCAP{
 
 	/**
 	 * Allows you to gain TEDS information that is readable
-	 * @param wtimId
-	 * @param channelId
-	 * @param tedsType
-	 * @param timeout
-	 * @return
+	 * @param wtimId - The wtim id
+	 * @param channelId - channel id
+	 * @param tedsType - teds type
+	 * @param timeout - timeout
+	 * @return the TEDS DATA
 	 */
 	public String queryTEDS(int wtimId,int channelId,int tedsType,int timeout) {
 
@@ -279,15 +277,15 @@ public class NCAP{
 
 	/**
 	 * Gives a correct instance of the what type the ncap is
-	 * @param currentIP
-	 * @param timeout
+	 * @param currentIP - The current ip
+	 * @param timeout - the timeout
 	 * @return an ncap
 	 */
 	public static NCAP getNCAP(String currentIP,int timeout) {
 
 		try {
 			Jsoup.connect(currentIP+"/1451/RdTimSampleStatus.htm").get().body();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return new NCAP(currentIP, timeout);
 		}
 

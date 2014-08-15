@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.util.Scanner;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -7,6 +6,7 @@ import org.xml.sax.SAXException;
 
 public class  Driver{
  
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws NumberFormatException, IOException, ParserConfigurationException, SAXException, InterruptedException {
 
 		NCAP ncap = NCAP.getNCAP("http://129.6.78.166", 10);//eth
@@ -40,6 +40,7 @@ public class  Driver{
 			}
 			Thread.sleep(1000);
 		}*/
+		
 		
 		
 	}
