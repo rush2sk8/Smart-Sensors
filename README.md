@@ -12,6 +12,3 @@ used to demonstrate the plug and play capability of the EESensors TIMs and NCAPs
 
 The device can now self id whether it is on wifi  or ethernet
 
-Fixes:
-Fixed major timeout issue 
-Self id
