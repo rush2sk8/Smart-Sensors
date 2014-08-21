@@ -24,7 +24,7 @@ public class NCAP{
 	 */
 	protected NCAP(String ip,int time){
 		currentIP = ip;
-		this.timeout = time;
+		this.timeout  = time;
 
 	}
 
@@ -78,7 +78,7 @@ public class NCAP{
 			//returns the sensor data at a certain channel id 
 			String response = scrapePage(currentIP+"/1451/TransducerAccess/ReadData.htm?timId="+wtimID+"&channelId="+channelID+"&timeout="+timeOut+"&samplingMode=7&timtype=1&format=0");
 
-			response =  response.substring(392, response.indexOf("© 2012 Esensors"));
+			response =  response.substring(392, response.indexOf("Â© 2012 Esensors"));
 			response = response.substring(response.indexOf("Transducer Data"));
 
 			return "Transducer " + wtimID + " Data:" + response.substring(15);
@@ -125,9 +125,9 @@ public class NCAP{
 	public String readRawTEDSFromTIM(int timID , int channelID, int timeout,int tedsType,int timType) throws IOException{
 
 		String data = scrapePage(currentIP+"/1451/TEDSManager/ReadRawTeds.htm?timId="+timID+"&channelId="+channelID+"&timeout="+timeout+"&tedsType="+tedsType+"&timtype="+timType+"&format=0");
-		data=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("© 2012 Esensors"));
+		data=data.substring(data.lastIndexOf("Raw TEDS"),data.indexOf("Â© 2012 Esensors"));
 
-		if(data.equals("Raw TEDS   ")) 
+		if(data.equals("Raw TEDS Â  ")) 
 			return "No TEDS Available";
 
 		return data;
@@ -142,7 +142,7 @@ public class NCAP{
 
 		String data = scrapePage(currentIP+"/1451/Discovery/TIMDiscovery.htm?reptim=1");
 
-		data = data.substring(470, data.indexOf("   © 2012 Esensors"));
+		data = data.substring(470, data.indexOf(" Â  Â© 2012 Esensors"));
 
 		ArrayList<String> tims = new ArrayList<String>(); 
 
@@ -218,7 +218,7 @@ public class NCAP{
 
 		String subbed=null;
 		try {	 
-			subbed = data.substring(data.indexOf("WTIM Ids List")+13,data.indexOf("   © 2012 Esensors"));
+			subbed = data.substring(data.indexOf("WTIM Ids List")+13,data.indexOf(" Â  Â© 2012 Esensors"));
 		}catch(Exception e) {e.printStackTrace();}
 
 		for(String s : subbed.split(",")) 
@@ -254,7 +254,7 @@ public class NCAP{
 			String toReturn = data.substring(data.indexOf("TIM Id "),trans)+"\n";
 			int tedsT = data.indexOf("TEDS Type");
 			toReturn +=data.substring(trans,tedsT)+"\n";
-			toReturn += data.substring(data.indexOf("TEDS Infor"),data.indexOf(" © 2012 Esensors"));
+			toReturn += data.substring(data.indexOf("TEDS Infor"),data.indexOf(" Â© 2012 Esensors"));
 			return toReturn;
 
 		} catch (IOException e) {
