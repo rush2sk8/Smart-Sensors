@@ -271,7 +271,7 @@ public class NCAP{
 	 * @throws IOException
 	 */
 	private String scrapePage(String u) throws IOException{
-		return Jsoup.connect(u).timeout(timeout*1000).get().body().text();
+		return Jsoup.connect(u).timeout(timeout*1050).get().body().text();
 	}
 
 
